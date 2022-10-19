@@ -1,0 +1,44 @@
+name: 2030s-checkstyle
+on: [push, pull_request] 
+
+jobs:
+  save-2-marks:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Get checkstyle 8.39
+        run: |
+          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.39/checkstyle-8.39-all.jar --output-document=checkstyle.jar
+
+      - name: Get CS2030S checkstyle config
+        run: |
+          wget https://raw.githubusercontent.com/kokrui-at-nus/CS2030S/main/checks.xml --output-document=checks.xml
+
+      - name: List changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v32
+
+      - name: Checkstyle changed non-test files
+        run: |
+          flg=0
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if [[ $file == *"Test"* || $file != *".java" ]]; then
+              echo "Skipping $file"
+            else
+              java -jar checkstyle.jar $file -c checks.xml > out
+              cat out
+              if grep -Fq "[WARN]" out
+              then
+                flg=1
+              fi
+            fi
+          done
+          if [ "$flg" -eq "1" ]; then
+            exit 1
+          fi
