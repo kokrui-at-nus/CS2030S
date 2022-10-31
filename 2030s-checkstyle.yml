@@ -13,6 +13,7 @@ jobs:
           java-version: '17'
 
       - name: Cache binary and config
+        id: cache-stuffs
         uses: actions/cache@v3
         with:
           path: |
@@ -21,10 +22,12 @@ jobs:
           key: 'idt_i_gotta_change_this'
 
       - name: Get checkstyle 8.39
+        if: steps.cache-stuffs.outputs.cache-hit != 'true'
         run: |
           wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.39/checkstyle-8.39-all.jar --output-document=checkstyle.jar
 
       - name: Get CS2030S checkstyle config
+        if: steps.cache-stuffs.outputs.cache-hit != 'true'
         run: |
           wget https://raw.githubusercontent.com/kokrui-at-nus/CS2030S/main/checks.xml --output-document=checks.xml
 
